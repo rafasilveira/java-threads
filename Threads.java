@@ -1,11 +1,11 @@
 import java.awt.Color;
 
-public class Serial {
+public class Threads {
 
   public static void main(String[] args) {
-  // public Serial(String[] args) {
+    // public Serial(String[] args) {
     if (args.length < 3) {
-      System.out.printf("Uso: <imagem_de_entrada.bmp> <saida.bmp> <tamanho_filtro>\n");
+      System.out.printf("Uso: <imagem_de_entrada.bmp> <saida.bmp> <tamanho_filtro> <num_threads>\n");
       return;
     }
 
@@ -20,16 +20,13 @@ public class Serial {
     }
 
     int filterSize = Integer.parseInt(args[2]);
+    int numThreads = Integer.parseInt(args[3]);
 
     Image input = new Image(args[0]);
     Image output = new Image(args[0]);
 
     System.out.println("Largura da imagem: " + input.width);
     System.out.println("Altura da imagem: " + input.height);
-
-    // int[] filter_buffer_red = new int[15 * 15];
-    // int[] filter_buffer_green = new int[15 * 15];
-    // int[] filter_buffer_blue = new int[15 * 15];
 
     int[] filter_buffer_red = new int[filterSize * filterSize];
     int[] filter_buffer_green = new int[filterSize * filterSize];
@@ -40,7 +37,40 @@ public class Serial {
     int width = input.width;
     int height = input.height;
 
-    for (int i = 0; i < height; i++) {
+    Thread[] threads = new Thread[numThreads];
+
+    int th = 0;
+    for (th = 0; th < numThreads; th++) {
+      final int tId = th;
+      threads[th] = new Thread() {
+        @Override
+        public void run() {
+          loop(tId, numThreads, width, height, filter_reach, output, filter_buffer_red, filter_buffer_green,
+              filter_buffer_blue);
+        }
+      };
+
+    }
+
+    for (int i = 0; i < numThreads; i++) {
+      threads[i].run();
+    }
+
+    for (int i = 0; i < numThreads; i++) {
+      try {
+        threads[i].join();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+    
+    output.ToBmp(args[1]);
+
+  }
+
+  static void loop(int thread, int nThreads, int width, int height, int filter_reach, Image output, int[] filter_buffer_red, int[] filter_buffer_green, int[] filter_buffer_blue) {
+    System.out.println("Ola thread " + thread);
+    for (int i = thread; i < height; i+= nThreads) {
       for (int j = 0; j < width; j++) {
         int filter_offset = 0;
 
@@ -74,10 +104,10 @@ public class Serial {
 
       }
     }
-
-    output.ToBmp(args[1]);
+  
 
   }
+
 
   static void sort_buffer(int[] buffer, int low, int high) {
     if (low < high) {
