@@ -111,3 +111,5 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/java,visualstudiocode,linux,windows,macos
 
 out/*
+
+.vscode
